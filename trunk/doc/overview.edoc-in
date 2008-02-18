@@ -1,0 +1,346 @@
+@author Vance Shipley <vances@motivity.ca>
+@copyright 2008 Motivity Telecom Inc.
+@version %VERSION%
+@title Home Subscriber Server (HSS)
+@reference <a href="http://www.3gpp.org/ftp/Specs/html-info/23228.htm">
+		IP Multimedia Subsystem (IMS)&#059; Stage 2 (3GPP TS 23.228)</a>
+@reference <a href="http://www.3gpp.org/ftp/Specs/html-info/29228.htm">
+		IP Multimedia (IM) Subsystem Cx and Dx Interfaces&#059; Signalling flows and message contents</a>
+@reference <a href="http://www.3gpp.org/ftp/Specs/html-info/23008.htm">
+		Organization of Subscriber Data (3GPP TS 23.008)</a>
+@doc This application implements the Home Subscriber Server (HSS) network
+		element within an IP Multimedia Subsystem (IMS) Core Network (CN).
+
+== IP Multimedia Subsystem ==
+
+The IMS is defined by the <a href="http://www.3gpp.org">Third Generation
+Partnership Project (3GPP)</a> as part of it's architecture for an
+<i>all-IP</i> 3G mobile phone network.  <a href="http://www.ietf.org">
+IETF</a> protocols were chosen wherever possible, in particular
+<a href="http://www.ietf.org/rfc/rfc3261.txt">SIP</a> and
+<a href="http://www.ietf.org/rfc/rfc3588.txt">DIAMETER</a>.  An IMS Core
+Network (CN) can be seen mainly as a collection of SIP proxies, registrars
+and servers along with a Home Subscriber Server (HSS).
+
+Within an IMS CN the Call Session Control Functions (CSCF) provide the
+SIP proxy and registrar functionality.  There are three distinct types; 
+Proxy-CSCF, Interrogating-CSCF and Serving-CSCF.  All communications with 
+IMS clients transit a P-CSCF, possibly in a visited IMS.  As seen in
+<a href="registration-path.png">Figure-1.1</a> the P-CSCF 
+forwards an initial REGISTER to an I-CSCF in the home IMS CN.  The I-CSCF 
+interrogates the HSS to help select an appropriate S-CSCF to forward the 
+request to.  The S-CSCF acts as the registrar authenticating the user 
+with the help of the HSS.
+
+<img alt="Figure-1.1" src="registration-path.png" />
+
+Application Servers (AS) provide all value added services above the basic
+completion of call sessions.  An S-CSCF will loop call signaling messages
+through an AS so as to allow the AS to modify and supplement the sessions.
+
+The HSS contains all permanent subscriber data and all relevant temporary 
+subscriber data to support the call control and session management within
+the IMS for all entities under it's administrative domain.  The HSS maintains
+the registration status of each Public User Identity registered at an S-CSCF.
+It performs a similiar function for IMS subscribers as that which a 2G
+cellular Home Location Registrar (HLR) performs for GSM handsets.
+
+Other network elements include those for media interworking, signaling
+interworking, media processing, security and charging.
+
+== Services ==
+
+The permanent subscriber data relates to subscriptions for services.  Each 
+Subscriber represents a relationship the network operator has with a client.
+A subscription may have a number of Users.  Each User is uniquely identified
+by a Private User Identity in the
+<a href="http://www.ietf.org/rfc/rfc4282.txt">NAI</a> form `username@realm'
+used only for authentication by the HSS and usually unknown to the user.
+All requests to establish communications with the user are associated with
+a Public User Identity.  The users within a subscription may, or may not,
+share some or all of the same Public User Identities.  The collection of
+services which are subscribed to by a subscriber are defined in a Service
+Profile.  Each Public User Identity within a subscription may be associated 
+with the same or different Service Profiles.  
+
+There will usually be at least two Public User Identities for any User.
+One will be in the form of a SIP URI (e.g. "sip:user@realm") and one in
+the form of a TEL URI (e.g. "tel:+16475551234").  Normally these would make
+up an Implicit Public User Identity Registration Set.  When any identity
+within the set is registered the others are implicitly registered.  
+<a href="3gpp-23.228-figure-5.0d.png">Figure 2-1</a> shows the implicit
+registration relationships.
+
+<img alt="Figure 2-1" src="3gpp-23.228-figure-5.0d.png" />
+
+A Public User Identity may only belong to one set.  If an identity in
+the set is shared between Users all identities in the set must be 
+similiarily shared.  <a href="implicit-registration-example.png">Figure 2-2</a>
+shows an example of implicit registration.
+
+<img alt="Figure 2-2" src="implicit-registration-example.png" />
+
+In the example of <a href="implicit-registration-example.png">Figure 2-2</a>
+Alex Harvey has a subscription to IMS services which he uses with two
+devices.  He will be registered with his work telephone number and SIP
+URI when using his mobile phone.  Alex also has a mobile device which
+he normally uses with only SIP Public User Identities.  His subscription
+does not allow him to use his main work identities on the device however
+there the hotline identities are available to both Users.  When he chooses
+to Alex may register one of the hotline Public User Identities from
+either device however both identities will be registered at that contact
+address.  Alex must be prepared to accept calls routed with the tel URI.
+
+== Database Schema ==
+
+In the current implementation the underlying database is mnesia.  The schema
+in <a href="permanent-subscriber-data.png">Figure 3-1</a> shows the
+organization of the permanent subscriber data.  Subscriptions are 
+represented by records in the `subscriber' table, Users in the `user' table, 
+Public User Identities in the `address' table and Service Profiles is the 
+`profile' table.
+
+<img alt="Figure 3-1" src="permanent-subscriber-data.png" />
+
+Registrations are temporary subscriber data describing the registration
+status of Public User Identities including the name of the S-CSCF where
+the registration is held.  A Public User Identity may be registered by
+several users at the same time and so multiple entries with registered
+state may appear in the table for the same identity.  An S-CSCF may keep
+a user profile stored without any registrations in some cases so one entry 
+with unregistered state may remain in the table.  An unregistered Public
+User Identity will generally not have a record in the table.  One or more
+entries with notregistered state may exist while authentication is pending.
+The schema in <a href="temporary-subscriber-data.png">Figure 3-2</a> shows
+the organization of the temporary subscriber data.
+
+<img alt="Figure 3-2" src="temporary-subscriber-data.png" />
+
+== Provisioning ==
+
+In a conventional operator network a large number of Universal Integrated
+Circuit Cards (UICC) would be manufactured and put into the the distribution
+channel.  The UICCs may contain an IP Multimedia Services Identity Module
+(ISIM) application or a Universal Subscriber Identity Module (USIM)
+application or both.  The manufacturer would provide a file listing the
+Integrated Circuit Card Identifiers (ICCID) and the corresponding 
+authentication keys (K and OPc) as well as IMS Private Identity (IMPI) and
+IMS Public Identity (IMPU) in the case of an ISIM, or International Mobile
+Subscriber Identity (IMSI) in the case of a USIM.  This file is used to 
+manage the card inventory.
+
+<img alt="Figure 4-1" src="card-flow.png" />
+
+To provision a new subscriber a card is taken from inventory and it's
+ICCID is used to determine the identities and keys stored on the UICC.
+Appropriate Public User IDs are assigned and a service profile is selected
+for each one.  A new subscriber and user table entry are created along with
+address table entries for each Public User ID.
+
+<img alt="Figure 4-2" src="provisioning.png" />
+
+It is mandatory that at least one Public User ID record is contained in
+the ISIM application however it is usually not practical to assign appropriate
+Public User Identities at the time of manufacture.  Assigning Public User IDs
+is typically done after a card is drawn from inventory and a subscriber
+identifies which city a telephone number should be assigned from or what
+name to use in a SIP URI.  This could be managed by administratively writing
+to the card before providing it to the subscriber but it is more convenient
+to manage address assignment entirely within the HSS.  This can be 
+accomplished by manufacturing the UICCs with a default IMPU, usually formed
+from the IMPI, and provisioning it as barred.  When the UICC is inserted
+in the user equipment (UE) it will read the ISIM and attempt to register
+the default IMPU.  For example:
+
+```
+   REGISTER sip:323.248.imsi.3gppnetwork.org SIP/2.0
+   From: <sip:2483235551234@323.248.imsi.3gppnetwork.org>;tag=4fa3
+   To: <sip:2483235551234@323.248.imsi.3gppnetwork.org>
+   Authorization: Digest username="2483235551234@323.248.imsi.3gppnetwork.org",
+                  realm="323.248.imsi.3gppnetwork.org", nonce="",
+                  uri="sip:323.248.imsi.3gppnetwork.org", response=""
+'''
+
+The same situation arises when the UICC contains only a USIM application.
+The IMS user equipment will read the USIM application and form a Temporary
+Private User ID and Temporary Public User ID derived from the IMSI.  The
+entire IMSI is used as the username part of the Private User Identity and
+the realm is constructed from the Mobile Network Code (MNC) and Mobile Country
+Code (MCC) and follows the form `MNC.MCC.imsi.3gppnetwork.org'.  The Public 
+User Identity is formed by prepending "`sip:'" to the Private User Identity.
+
+In the final response to a successful registration the `P-Associated-URI'
+header will contain the list of all non-barred Public User IDs associated
+with the registered identity.  The UE will understand that it may not use
+the default temporary identity for communications and will recognize the 
+assigned identities.
+
+```
+   SIP/2.0 200 OK
+   From: <sip:2483235551234@323.248.imsi.3gppnetwork.org>;tag=4fa3
+   To: <sip:2483235551234@323.248.imsi.3gppnetwork.org>;tag=409sp3
+   P-Associated-URI: <sip:alex.harvey@vibrania.com>,
+                     <sip:+16475551234@acme.net;user=phone>
+'''
+
+== Getting Started ==
+
+The hss application is database centric, it requires an {@link //mnesia.
+mnesia} database to be configured and running.  Here we'll create a new 
+database.
+
+```
+   1> mnesia:create_schema([node()]),
+   1> mnesia:start().
+'''
+
+A utility is provided to create the tables of the hss application
+when installing for the first time.
+
+```
+   2> hss:install([node()]).
+'''
+
+We need crypto and hss running.  We'll load record definitions as well.
+```
+   3> crypto:start(),
+   3> application:start(hss),
+   3> rr("include/*.hrl").
+'''
+
+First we'll create a simple service profile.  An initial filter criteria
+which matches all messages is created with the application server name.
+Then a new service profile which includes this filter is created and
+can now be used with subscriptions. 
+
+```
+   4> InitialFilterCriteriaID = hss:add_filter(0, "sip:as.acme.net"),
+   4> ServiceProfileID = hss:add_profile([InitialFilterCriteriaID]).
+'''
+
+Now we'll create Alex Harvey's subscription using an ISIM or USIM with
+the IMPI `2483235551234@323.248.imsi.3gppnetwork.org'.  We'll include all
+three Public User Identities which we'll be adding later in an Implicit
+Registration Set.
+
+```
+   5> PrivateUserID = "2483235551234@323.248.imsi.3gppnetwork.org",
+   5> PublicUserIDs = ["sip:2483235551234@323.248.imsi.3gppnetwork.org", "tel:+16475551234", "sip:alex@vibrania.com"],
+   5> ImplicitRegistrationSets = hss:add_implicit_registration_set(PublicUserIDs, hss:new_implicit_registration_sets()),
+   5> SubscriberID = hss:add_subscriber([PrivateUserID], [], ImplicitRegistrationSets, #serverCapabilities{}).
+'''
+
+The 3GPP authentication algorithm {@link //hss/milenage. MILENAGE}
+requires a constant value known as the Operator Variant Algorithm 
+Configuration Field (OP).  This 128 bit key is normally generated once,
+once for each UICC manufacturer or once for each UICC manufacturing run.
+It is normally kept secret but this isn't strictly necessary.
+
+```
+   6> OP = crypto:rand_bytes(16).
+'''
+
+In this example we'll create new authentication keys presuming to 
+administratively update the UICC with these keys.  Normally we would have
+referenced the card inventory by ICCID to determine the keys manufactured
+onto the card.  First we'll generate the 128 bit subscriber authentication
+key {@link //hss/milenage:k(). K}.  Then the key
+{@link //hss/milenage:opc(). OPc} is generated from `OP' and `K'.
+
+```
+   7> K = crypto:rand_bytes(16),
+   7> OPc = milenage:opc(OP, K).
+'''
+
+Now we're ready to create the user table entry.
+
+```
+   8> hss:add_user(SubscriberID, PrivateUserID, PublicUserIDs, K, OPc).
+'''
+
+Finally we ceate the address table records for each Public User ID.  The
+temporary Public User Identity stored on the ISIM, or generated from the IMSI
+in the case of a USIM, is marked as barred.
+
+```
+   9> hss:add_address(SubscriberID, "sip:2483235551234@323.248.imsi.3gppnetwork.org", ServiceProfileID, ["acme.net"], true, false),
+   9> hss:add_address(SubscriberID, "tel:+16475551234", ServiceProfileID, ["acme.net"], false, false),
+   9> hss:add_address(SubscriberID, "sip:alex@vibrania.com", ServiceProfileID, ["acme.net"], false, false).
+'''
+
+Now we'll instantiate an {@link //hss/hss_server. hss_server} to accept
+requests.
+
+```
+   10> {ok, Pid} = hss:start_link([]).
+'''
+
+To simulate an Interrogating-CSCF handling an initial registration we
+can send a User-Authorization-Request command to the server.
+
+```
+   11> PublicUserID = "sip:2483235551234@323.248.imsi.3gppnetwork.org",
+   11> hss:user_registration_status_query(PublicUserID, "acme.net", registration, PrivateUserID, Pid).
+   #user_registration_status_response{resultCode = undefined,
+         experimentalResult = first_registration,
+         sCSCFCapabilities = #serverCapabilities{
+                 mandatory_capabilities = [],
+                 optional_capabilities = [],
+                 sCSCFName = []},
+         sCSCFName = undefined}
+'''
+
+The response is a {@link hss:user_registration_status_response().
+user_registration_status_response()} indicating
+that no Serving-CSCF has been assigned yet.  The required capabilities
+of an S-CSCF to serve this user's Service Profile are provided (undefined
+in this example) so that the I-CSCF may select an appropriate S-CSCF.
+
+The I-CSCF would now forward the initial registration to the selected S-CSCF.
+Since this is an initial registration the S-CSCF will not have any
+authentication vectors with which to authenticate the user.  The next step
+is for the S-CSCF to request authentication vectors for the user from the HSS.
+
+```
+   12> hss:authentication_request(PublicUserID, PrivateUserID, 1, #authenticationData{}, "sip:scscf1.acme.net", Pid).
+   #authentication_request_response{
+    resultCode = success, experimentalResult = undefined,
+    publicUserID = "sip:2483235551234@323.248.imsi.3gppnetwork.org",
+    privateUserID = "2483235551234@323.248.imsi.3gppnetwork.org",
+    numberAuthenticationItems = 1,
+    authenticationData = 
+        [#authenticationData{
+             itemNumber = 1, authenticationScheme = "Digest-AKAv1-MD5",
+             authenticationInformation = <<251,82,204,64,9,191,65,...>>,
+             authorizationInformation = <<89,185,17,245,48,215,253,179>>,
+             confidentialityKey = <<1,220,242,88,79,5,195,124,133,...>>,
+             integrityKey = <<134,214,75,45,61,230,112,212,115,226...>>}]}
+'''
+
+The S-CSCF will now use one of the authentication vectors to challenge
+the user.  Once the registration is complete the S-CSCF sends a registration
+notification to the HSS.
+
+```
+   13> hss:scscf_registration_notification("sip:2483235551234@323.248.imsi.3gppnetwork.org", "sip:scscf1.acme.net", PrivateUserID, registration, false, Pid).
+   #scscf_registration_notification_response{privateUserID = undefined,
+        resultCode = success, experimentalResult = undefined,
+        chargingInformation = undefined,
+        userProfile = "<?xml version=\"1.0\"?><IMSSubscription xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:noNamespaceSchemaLocation=\"CxDataType.xsd\"><PrivateID>2483235551234@323.248.imsi.3gppnetwork.org</PrivateID><ServiceProfile><PublicIdentity><BarringIndication>1</BarringIndication><Identity>sip:2483235551234@323.248.imsi.3gppnetwork.org</Identity></PublicIdentity><PublicIdentity><Identity>sip:alex@vibrania.com</Identity></PublicIdentity><PublicIdentity><Identity>tel:+16475551234</Identity></PublicIdentity><InitialFilterCriteria><Priority>0</Priority><ApplicationServer><ServerName>sip:as.acme.net</ServerName></ApplicationServer></InitialFilterCriteria></ServiceProfile></IMSSubscription>",
+        associatedPrivateIDs = undefined}
+'''
+
+The response is a {@link hss:scscf_registration_notification_response()}
+which includes a download of the relevant user profile in XML format.
+
+When the I-CSCF receives an INVITE it will request from the HSS the name
+of the S-CSCF assigned to the public user identity.
+
+```
+   14> hss:user_location_query(PublicUserID, Pid).
+   #user_location_response{resultCode = success,
+       experimentalResult = undefined,
+       sCSCFName = "sip:scscf1.acme.net",
+       sCSCFCapabilities = undefined}
+'''
+
