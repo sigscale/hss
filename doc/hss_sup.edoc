@@ -1,0 +1,16 @@
+@doc This module implements the  supervisor for the hss application servers.
+
+The application behaviour callback module for the hss application
+starts this supervisor.  Initially no children are started.  Servers
+are added by calling <tt>hss:start_link/1</tt>.
+
+The supervision heirachy is depicted in
+<a href="supervision.png">Figure 1-1</a>.  When the <tt>hss</tt> application
+starts it's application callback module <tt>hss_app</tt> starts the 
+supervisor implemented in this module.  This supervisor initially has
+no child processes.  Servers instantiated from the <tt>hss_server</tt>
+module will be started later using {@link hss:start_link/1}.
+
+<img alt="supervision heirachy" src="supervision.png" /><br />
+<a href="supervision.png">Figure 1-1</a>
+
