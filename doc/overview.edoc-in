@@ -1,7 +1,7 @@
 @author Vance Shipley <vances@motivity.ca>
 @copyright 2008 Motivity Telecom Inc.
 @version %VERSION%
-@title Home Subscriber Server (HSS)
+@title The 3Gdb Home Subscriber Server(HSS)
 @reference <a href="http://www.3gpp.org/ftp/Specs/html-info/23228.htm">
 		IP Multimedia Subsystem (IMS)&#059; Stage 2 (3GPP TS 23.228)</a>
 @reference <a href="http://www.3gpp.org/ftp/Specs/html-info/29228.htm">
