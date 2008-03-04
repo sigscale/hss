@@ -26,6 +26,27 @@ $(docdir)/%.edoc:	$(docdir)/%.edoc-in
 html:	edoc
 	$(ERL) -noshell -run edoc_run application "'hss'" '"."' \
 			'[{sort_functions,false}]'
+	@cd doc && (sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < overview-summary.html > t.html; \
+			  mv t.html overview-summary.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < hss.html > t.html; \
+			  mv t.html hss.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < hss_app.html > t.html; \
+			  mv t.html hss_app.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < hss_sup.html > t.html; \
+			  mv t.html hss_sup.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < hss_server.html > t.html; \
+			  mv t.html hss_server.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < hss_xml.html > t.html; \
+			  mv t.html hss_xml.html; \
+			  sed -e 's!erlang logo!3Gdb logo!' \
+			  -e 's!erlang.png!3Gdb.15.png!' < milenage.html > t.html; \
+			  mv t.html milenage.html)
 
 .PHONY=all_doc
 all_doc:	edoc
