@@ -1,8 +1,7 @@
 ## $Id: Makefile,v 1.7 2008/02/17 11:50:10 vances Exp $
 
-ERL = erl
 ERLC = erlc
-ERLCFLAGS = -v -W -I $(incdir) -I /Users/otpuser/lib/erlang/lib/xmerl-1.1.6/include -o $(beamdir) +debug_info
+ERLCFLAGS = -v -W -I $(incdir) -o $(beamdir) +debug_info
 
 incdir	= ../include
 beamdir	= ../ebin

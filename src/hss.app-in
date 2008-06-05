@@ -6,7 +6,7 @@
 	{maxP, infinity},
 	{maxT, infinity},
 	{registered, []},
-	{included_applications, []},
+	{included_applications, [xmerl]},
 	{applications, [kernel, stdlib, mnesia, crypto]},
 	{env,
 		[{keep_unregistered_scscf, true},

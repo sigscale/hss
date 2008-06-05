@@ -3,7 +3,7 @@
 export HSS_ID="Motivity HSS"
 export HSS_VERSION=1.0
 
-ERL = erl
+export ERL=erl
 
 docdir = ./doc
 
