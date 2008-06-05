@@ -48,7 +48,7 @@
 -export([subscription/2]).
 
 -include("subscriber_data.hrl").
--include("xmerl.hrl").
+-include_lib("xmerl/include/xmerl.hrl").
 
 %%----------------------------------------------------------------------
 %%  The hss_profile API
