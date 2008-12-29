@@ -84,7 +84,7 @@
 %% @doc Create a new subscriber in the database.
 %%
 add_subscriber(Subscriber) when is_record(Subscriber, subscriber) ->
-	SubscriberID = make_ref(),
+	SubscriberID = make_guid(),
 	case mnesia:transaction(fun() ->
 			mnesia:write(Subscriber#subscriber{subscriberID
 					= SubscriberID}) end) of
@@ -120,14 +120,14 @@ add_subscriber(PrivateUserIDs, SharedPublicUserIDs,
 %%
 %% @doc Create a new service profile in the database.
 add_profile(InitialFilterCriteriaIDs) when is_list(InitialFilterCriteriaIDs) ->
-	Fref = fun(R) when is_reference(R) ->
+	Fref = fun({Node, _Now, Ref}) when is_atom(Node), is_reference(Ref) ->
 				true;
 			(_) ->
 				false
 	end,
 	case lists:all(Fref, InitialFilterCriteriaIDs) of
 		true ->
-			ServiceProfileID = make_ref(),
+			ServiceProfileID = make_guid(),
 			Profile = #profile{serviceProfileID = ServiceProfileID,
 					initialFilterCriteriaIDs = InitialFilterCriteriaIDs},
 			case mnesia:transaction(fun() -> mnesia:write(Profile) end) of
@@ -154,7 +154,7 @@ add_profile(InitialFilterCriteriaIDs, SharedIFCSetIDs,
 		when is_list(InitialFilterCriteriaIDs),
 		is_list(SharedIFCSetIDs),
 		is_integer(SubscribedMediaProfileID), SubscribedMediaProfileID >= 0 ->
-	Fref = fun(R) when is_reference(R) ->
+	Fref = fun({Node, _Now, Ref}) when is_atom(Node), is_reference(Ref) ->
 				true;
 			(_) ->
 				false
@@ -167,7 +167,7 @@ add_profile(InitialFilterCriteriaIDs, SharedIFCSetIDs,
 	case lists:all(Fref, InitialFilterCriteriaIDs)
 				andalso lists:all(Fint, SharedIFCSetIDs) of
 		true ->
-			ServiceProfileID = make_ref(),
+			ServiceProfileID = make_guid(),
 			Profile = #profile{serviceProfileID = ServiceProfileID,
 					initialFilterCriteriaIDs = InitialFilterCriteriaIDs,
 					subscribedMediaProfileID = SubscribedMediaProfileID,
@@ -193,8 +193,8 @@ add_profile(InitialFilterCriteriaIDs, SharedIFCSetIDs,
 %%
 %% @doc Create a new user entry in the database.
 %%
-add_user(SubscriberID, PrivateUserID, PublicUserIDs, K, OPc)
-		when is_reference(SubscriberID), is_list(PrivateUserID),
+add_user({Node, _Now, Ref} = SubscriberID, PrivateUserID, PublicUserIDs, K, OPc)
+		when is_atom(Node), is_reference(Ref), is_list(PrivateUserID),
 		is_list(PublicUserIDs), is_list(hd(PublicUserIDs)),
 		is_binary(K), size(K) == 16, is_binary(OPc), size(OPc) == 16 ->
 	User = #user{privateUserID = PrivateUserID,
@@ -240,9 +240,10 @@ add_address(#address{publicUserID = "tel:" ++ _,
 	add_address(Address, SubscriberID, ServiceProfileID).
 
 %% @hidden
-add_address(Address, SubscriberID, ServiceProfileID) 
-		when is_record(Address, address),
-		is_reference(SubscriberID), is_reference(ServiceProfileID) ->
+add_address(Address, {Node1, _Now1, Ref1} = SubscriberID,
+		{Node2, _Now2, Ref2} = ServiceProfileID) 
+		when is_record(Address, address), is_atom(Node1), is_reference(Ref1),
+		is_atom(Node2), is_reference(Ref2) ->
 	case mnesia:transaction(fun() ->
 			[_Subscriber] = mnesia:read(subscriber, SubscriberID, read),
 			[_Profile] = mnesia:read(profile, ServiceProfileID, read),
@@ -265,10 +266,11 @@ add_address(Address, SubscriberID, ServiceProfileID)
 %%
 %% @doc Create a new address entry in the database.
 %%
-add_address(SubscriberID, PublicUserID, ServiceProfileID,
-		AuthVisitedNetworkIDs, BarringIndicator, ServicesUnregState)
-		when is_reference(SubscriberID), is_list(PublicUserID),
-		is_reference(ServiceProfileID), is_list(AuthVisitedNetworkIDs),
+add_address({Node1, _Now1, Ref1} = SubscriberID, PublicUserID,
+		{Node2, _Now2, Ref2} = ServiceProfileID, AuthVisitedNetworkIDs,
+		BarringIndicator, ServicesUnregState)
+		when is_atom(Node1), is_reference(Ref1), is_list(PublicUserID),
+		is_atom(Node2), is_reference(Ref2), is_list(AuthVisitedNetworkIDs),
 		(BarringIndicator =:= true orelse BarringIndicator =:= false),
 		(ServicesUnregState =:= true orelse ServicesUnregState =:= false) ->
 	Address = #address{publicUserID = PublicUserID,
@@ -286,7 +288,7 @@ add_address(SubscriberID, PublicUserID, ServiceProfileID,
 %% @doc Create a new initial filter criteria (iFC) in the database.
 %%
 add_filter(Priority, ApplicationServerName) ->
-	InitialFilterCriteriaID = make_ref(),
+	InitialFilterCriteriaID = make_guid(),
 	Filter = #filter{initialFilterCriteriaID = InitialFilterCriteriaID,
 			priority = Priority,
 			applicationServerName = ApplicationServerName},
@@ -324,7 +326,7 @@ add_filter(Priority, ApplicationServerName, ProfilePartIndicator,
 		orelse ConditionTypeCNF == false))
 		orelse (ServicePointTriggerIDs == undefined
 		andalso ConditionTypeCNF == undefined) ->
-	InitialFilterCriteriaID = make_ref(),
+	InitialFilterCriteriaID = make_guid(),
 	Filter = #filter{initialFilterCriteriaID = InitialFilterCriteriaID,
 			priority = Priority,
 			profilePartIndicator = ProfilePartIndicator,
@@ -365,7 +367,7 @@ add_trigger(ConditionNegated, Group, Condition, RegistrationType)
 	end,
 	case lists:all(Fint, Group) of
 		true ->
-			ServicePointTriggerID = make_ref(),
+			ServicePointTriggerID = make_guid(),
 			Trigger = #trigger{servicePointTriggerID = ServicePointTriggerID,
 					conditionNegated = ConditionNegated, group = Group,
 					condition = {method, "REGISTER"},
@@ -423,11 +425,11 @@ add_trigger(ConditionNegated, Group, Condition)
 	end,
 	case lists:all(Fint, Group) of
 		true ->
-			ServicePointTriggerID = make_ref(),
+			ServicePointTriggerID = make_guid(),
 			Trigger = #trigger{servicePointTriggerID = ServicePointTriggerID,
 					conditionNegated = ConditionNegated, group = Group,
 					condition = Condition},
-			case mnesia:transaction(fun() -> mnesia:write(Trigger) end) of
+		  case mnesia:transaction(fun() -> mnesia:write(Trigger) end) of
 				{atomic, _Result} ->
 					ServicePointTriggerID;
 				Error ->
@@ -443,7 +445,8 @@ add_trigger(ConditionNegated, Group, Condition)
 %%
 %% @doc Remove a service profile from the database.
 %%
-remove_profile(ServiceProfileID) when is_reference(ServiceProfileID) -> 
+remove_profile({Node, _Now, Ref} = ServiceProfileID)
+		when is_atom(Node), is_reference(Ref) -> 
 	case mnesia:transaction(fun() ->
 			mnesia:delete(profile, ServiceProfileID, write) end) of
 		{atomic, _Result} ->
@@ -458,7 +461,8 @@ remove_profile(ServiceProfileID) when is_reference(ServiceProfileID) ->
 %%
 %% @doc Remove a filter from the database.
 %%
-remove_filter(Filter) when is_reference(Filter) -> 
+remove_filter({Node, _Now, Ref} = Filter)
+		when is_atom(Node), is_reference(Ref) -> 
 	case mnesia:transaction(fun() ->
 			mnesia:delete(filter, Filter, write) end) of
 		{atomic, _Result} ->
@@ -472,7 +476,8 @@ remove_filter(Filter) when is_reference(Filter) ->
 %% 	Trigger = serviceTriggerPointID()
 %%
 %% @doc Remove a trigger from the database.
-remove_trigger(Trigger) when is_reference(Trigger) -> 
+remove_trigger({Node, _Now, Ref} = Trigger)
+		when is_atom(Node), is_reference(Ref) -> 
 	case mnesia:transaction(fun() ->
 			mnesia:delete(trigger, Trigger, write) end) of
 		{atomic, _Result} ->
@@ -487,7 +492,8 @@ remove_trigger(Trigger) when is_reference(Trigger) ->
 %%
 %% @doc Remove a user from the database.
 %%
-remove_user(PrivateUserID) when is_reference(PrivateUserID) -> 
+remove_user({Node, _Now, Ref} = PrivateUserID)
+		when is_atom(Node), is_reference(Ref) -> 
 	case mnesia:transaction(fun() ->
 			[User] = mnesia:read(user, PrivateUserID, write),
 			[Subscriber] = mnesia:read(subscriber,
@@ -509,7 +515,12 @@ remove_user(PrivateUserID) when is_reference(PrivateUserID) ->
 %%
 %% @doc Remove an address from the database.
 %%
-remove_address(PublicUserID) when is_reference(PublicUserID) -> 
+remove_address("sip:" ++ _ = PublicUserID) ->
+	remove_address1(PublicUserID);
+remove_address("tel:" ++ _ = PublicUserID) ->
+	remove_address1(PublicUserID).
+%% @hidden
+remove_address1(PublicUserID) ->
 	case mnesia:transaction(fun() ->
 			mnesia:delete(address, PublicUserID, write) end) of
 		{atomic, ok} ->
@@ -524,7 +535,8 @@ remove_address(PublicUserID) when is_reference(PublicUserID) ->
 %%
 %% @doc Remove subscriber from the database.
 %%
-remove_subscriber(SubscriberID) when is_reference(SubscriberID) -> 
+remove_subscriber({Node, _Now, Ref} = SubscriberID)
+		when is_atom(Node), is_reference(Ref) -> 
 	case mnesia:transaction(fun() ->
 			Faddr = fun(PublicUserID) ->
 						mnesia:delete(address, PublicUserID, write) end,
@@ -555,7 +567,8 @@ get_subscriber() ->
 %%
 %% @doc Retrieves the {@link subscriber()} entry from the database.
 %%
-get_subscriber(SubscriberID) when is_reference(SubscriberID) ->
+get_subscriber({Node, _Now, Ref} = SubscriberID)
+		when is_atom(Node), is_reference(Ref) -> 
 	get_record(subscriber, SubscriberID).
 
 %% @spec (UserIdentity) -> subscriberID()
@@ -601,7 +614,8 @@ get_profile() ->
 %%
 %% @doc Retrieves the profile entry from the database.
 %%
-get_profile(ProfileID) when is_reference(ProfileID) ->
+get_profile({Node, _Now, Ref} = ProfileID)
+		when is_atom(Node), is_reference(Ref) ->
 	get_record(profile, ProfileID).
 
 %% @spec () -> publicUserID()
@@ -616,7 +630,12 @@ get_address() ->
 %%
 %% @doc Retrieves the address entry from the database.
 %%
-get_address(PublicUserID) when is_list(PublicUserID) ->
+get_address("sip:" ++ _ = PublicUserID) ->
+	get_address1(PublicUserID);
+get_address("tel:" ++ _ = PublicUserID) ->
+	get_address1(PublicUserID).
+%% @hidden
+get_address1(PublicUserID) ->
 	get_record(address, PublicUserID).
 
 %% @spec (PublicUserIDs) -> [address()]
@@ -625,7 +644,16 @@ get_address(PublicUserID) when is_list(PublicUserID) ->
 %% @doc Retrieves the address entries from the database.
 %%
 get_addresses(PublicUserIDs) when is_list(PublicUserIDs) ->
-	get_records(address, PublicUserIDs).
+	F = fun("sip:" ++ _) -> true;
+			("tel:" ++ _) -> true;
+			(_) -> false
+	end,
+	case lists:all(F, PublicUserIDs) of
+		true ->
+			get_records(address, PublicUserIDs);
+		false ->
+			exit(badarg)
+	end.
 
 %% @spec () -> initialFilterCriteriaID()
 %%
@@ -640,7 +668,8 @@ get_filter() ->
 %%
 %% @doc Retrieves the filter entry from the database.
 %%
-get_filter(InitialFilterCriteriaID) when is_reference(InitialFilterCriteriaID) ->
+get_filter({Node, _Now, Ref} = InitialFilterCriteriaID)
+		when is_atom(Node), is_reference(Ref) ->
 	get_record(filter, InitialFilterCriteriaID).
 
 %% @spec () -> servicePointTriggerID()
@@ -656,7 +685,8 @@ get_trigger() ->
 %%
 %% @doc Retrieves the triger entry from the database.
 %%
-get_trigger(ServicePointTriggerID) when is_reference(ServicePointTriggerID) ->
+get_trigger({Node, _Now, Ref} = ServicePointTriggerID)
+		when is_atom(Node), is_reference(Ref) ->
 	get_record(trigger, ServicePointTriggerID).
 
 %% @spec (ServiceProfileID) -> serviceProfile()
@@ -664,7 +694,8 @@ get_trigger(ServicePointTriggerID) when is_reference(ServicePointTriggerID) ->
 %%
 %% @doc Retrieves the complete Service Profile.
 %%
-get_service(ServiceProfileID) when is_reference(ServiceProfileID) ->
+get_service({Node, _Now, Ref} = ServiceProfileID)
+		when is_atom(Node), is_reference(Ref) ->
 	Fun = fun(Fun, [H | T], Acc) ->
 				Triggers = lists:flatten([mnesia:read(trigger, S, read)
 						|| S <- H#filter.servicePointTriggerIDs]),
@@ -1015,6 +1046,10 @@ start_link(Args) ->
 %%----------------------------------------------------------------------
 %%  internal functions
 %%----------------------------------------------------------------------
+
+%% @spec () -> guid()
+make_guid() ->
+	{node(), now(), make_ref()}.
 
 %% @spec (RoutingInformation::string()) -> pid()
 %% @hidden

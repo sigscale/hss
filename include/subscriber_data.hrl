@@ -39,6 +39,17 @@
 %%% reference: Organization of Subscriber Data (3GPP TS 23.008)
 %%%
 
+
+%% @type guid() = {Node, Now, Reference}
+%% 	Node = node()
+%% 	Now = {MegaSecs, Secs, MicroSecs}
+%% 	MegaSecs = integer()
+%% 	Secs = integer()
+%% 	MicroSecs = integer()
+%% 	Reference = reference().
+%% A globally unique reference used as an index key in permanent
+%% subscriber data tables.
+
 %% @type serverCapabilities() = #serverCapabilities{
 %% 		mandatory_capabilities = [integer()],
 %% 		optional_capabilities = [integer()],
@@ -60,7 +71,7 @@
 %% 	An entry in the <tt>subscriber</tt> database table storing
 %% 	information related to an IMS services subscription.
 %%
-%% @type subscriberID() = reference().
+%% @type subscriberID() = guid().
 %% 	Index into the <tt>subscriber</tt> table.
 %%
 %% @type sharedPublicUserIDs() = [publicUserID()].
@@ -172,7 +183,7 @@
 %% 	An entry in the <tt>profile</tt> database table storing
 %% 	a collection of IMS service related information.
 %%
-%% @type serviceProfileID() = reference().
+%% @type serviceProfileID() = guid().
 %% 	Index into the the <tt>profile</tt> table.
 %%
 %% @type sharedIFCSetIDs() = [integer()].
@@ -202,7 +213,7 @@
 %% 	information about service logic in a service profile referred
 %% 	to as Initial Filter Criteria (iFC).
 %%
-%% @type initialFilterCriteriaID() = reference().
+%% @type initialFilterCriteriaID() = guid().
 %% 	Index into the the <tt>filter</tt> table.
 %%
 %% @type priority() = integer().
@@ -246,7 +257,7 @@
 %% 	An entry in the <tt>trigger</tt> database table storing
 %% 	information about a service point trigger in a filter.
 %%
-%% @type servicePointTriggerID() = reference().
+%% @type servicePointTriggerID() = guid().
 %% 	Index into the the <tt>trigger</tt> table.
 %%
 %% @type conditionNegated() = boolean().
