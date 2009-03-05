@@ -8,7 +8,7 @@ export ERL=erl
 docdir = ./doc
 
 .PHONY=all
-all: beams check html
+all: beams html
 
 .PHONY=beams
 beams:
