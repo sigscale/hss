@@ -265,7 +265,7 @@ user_registration_status_query(#user_registration_status_query{
 					{privateUserID, PrivateUserID},
 					{publicUserID, PublicUserID}])
 	end,
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			user_registration_status_query1(URSQ, From, State) end) of
 		{atomic, Reply} ->
 			{reply, Reply, State};
@@ -557,7 +557,7 @@ scscf_registration_notification(#scscf_registration_notification{
 					{privateUserID, PrivateUserID},
 					{publicUserID, PublicUserID}])
 	end,
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			scscf_registration_notification1(SRN, From, State) end) of
 		{atomic, Reply} ->
 			{reply, Reply, State};
@@ -1096,7 +1096,7 @@ user_location_query(#user_location_query{publicUserID = PublicUserID} = ULQ,
 				{reply, Reason},
 				{publicUserID, PublicUserID}])
 	end,
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			user_location_query1(ULQ, From, State) end) of
 		{atomic, Reply} ->
 			{reply, Reply, State};
@@ -1215,7 +1215,7 @@ authentication_request(#authentication_request{
 				{privateUserID, PrivateUserID},
 				{publicUserID, PublicUserID}])
 	end,
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			authentication_request1(ARQ, From, State) end) of
 		{atomic, Reply} ->
 			{reply, Reply, State};
