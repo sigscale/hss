@@ -61,7 +61,7 @@
 %% @doc Create a user profile in XML format for download to an S-CSCF.
 %%
 subscription(PrivateUserID, PublicUserIDs) ->
-	case mnesia:transaction(fun() -> profiles(PublicUserIDs) end) of
+	case mnesia:activity(transaction, fun() -> profiles(PublicUserIDs) end) of
 		{atomic, Profiles} ->
 			Root = root(),
 			PrivateID = #xmlElement{name = 'PrivateID',

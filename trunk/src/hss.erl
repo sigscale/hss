@@ -85,7 +85,7 @@
 %%
 add_subscriber(Subscriber) when is_record(Subscriber, subscriber) ->
 	SubscriberID = make_guid(),
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:write(Subscriber#subscriber{subscriberID
 					= SubscriberID}) end) of
 		{atomic, _Result} ->
@@ -130,7 +130,7 @@ add_profile(InitialFilterCriteriaIDs) when is_list(InitialFilterCriteriaIDs) ->
 			ServiceProfileID = make_guid(),
 			Profile = #profile{serviceProfileID = ServiceProfileID,
 					initialFilterCriteriaIDs = InitialFilterCriteriaIDs},
-			case mnesia:transaction(fun() -> mnesia:write(Profile) end) of
+			case mnesia:activity(transaction, fun() -> mnesia:write(Profile) end) of
 				{atomic, _Result} ->
 					ServiceProfileID;
 				Error ->
@@ -172,7 +172,8 @@ add_profile(InitialFilterCriteriaIDs, SharedIFCSetIDs,
 					initialFilterCriteriaIDs = InitialFilterCriteriaIDs,
 					subscribedMediaProfileID = SubscribedMediaProfileID,
 					sharedIFCSetIDs = SharedIFCSetIDs},
-			case mnesia:transaction(fun() -> mnesia:write(Profile) end) of
+			case mnesia:activity(transaction, fun() ->
+					mnesia:write(Profile) end) of
 				{atomic, _Result} ->
 					ServiceProfileID;
 				Error ->
@@ -208,7 +209,7 @@ add_user({Node, _Now, Ref} = SubscriberID, PrivateUserID, PublicUserIDs, K, OPc)
 %% @doc Create a new user entry in the database.
 %%
 add_user(#user{privateUserID = PrivateUserID} = User) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			[S] = mnesia:read(subscriber, User#user.subscriberID, write),
 			case lists:member(PrivateUserID, S#subscriber.privateUserIDs) of
 				true ->
@@ -244,7 +245,7 @@ add_address(Address, {Node1, _Now1, Ref1} = SubscriberID,
 		{Node2, _Now2, Ref2} = ServiceProfileID) 
 		when is_record(Address, address), is_atom(Node1), is_reference(Ref1),
 		is_atom(Node2), is_reference(Ref2) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			[_Subscriber] = mnesia:read(subscriber, SubscriberID, read),
 			[_Profile] = mnesia:read(profile, ServiceProfileID, read),
 			mnesia:write(address, Address, write) end) of
@@ -292,7 +293,7 @@ add_filter(Priority, ApplicationServerName) ->
 	Filter = #filter{initialFilterCriteriaID = InitialFilterCriteriaID,
 			priority = Priority,
 			applicationServerName = ApplicationServerName},
-	case mnesia:transaction(fun() -> mnesia:write(Filter) end) of
+	case mnesia:activity(transaction, fun() -> mnesia:write(Filter) end) of
 		{atomic, _Result} ->
 			InitialFilterCriteriaID;
 		Error ->
@@ -335,7 +336,7 @@ add_filter(Priority, ApplicationServerName, ProfilePartIndicator,
 			serviceInformation = ServiceInformation,
 			conditionTypeCNF = ConditionTypeCNF,
 			servicePointTriggerIDs = ServicePointTriggerIDs},
-	case mnesia:transaction(fun() -> mnesia:write(Filter) end) of
+	case mnesia:activity(transaction, fun() -> mnesia:write(Filter) end) of
 		{atomic, _Result} ->
 			InitialFilterCriteriaID;
 		Error ->
@@ -372,7 +373,8 @@ add_trigger(ConditionNegated, Group, Condition, RegistrationType)
 					conditionNegated = ConditionNegated, group = Group,
 					condition = {method, "REGISTER"},
 					registrationType = RegistrationType},
-			case mnesia:transaction(fun() -> mnesia:write(Trigger) end) of
+			case mnesia:activity(transaction, fun() ->
+					mnesia:write(Trigger) end) of
 				{atomic, _Result} ->
 					ServicePointTriggerID;
 				Error ->
@@ -429,7 +431,8 @@ add_trigger(ConditionNegated, Group, Condition)
 			Trigger = #trigger{servicePointTriggerID = ServicePointTriggerID,
 					conditionNegated = ConditionNegated, group = Group,
 					condition = Condition},
-		  case mnesia:transaction(fun() -> mnesia:write(Trigger) end) of
+		  case mnesia:activity(transaction, fun() ->
+					mnesia:write(Trigger) end) of
 				{atomic, _Result} ->
 					ServicePointTriggerID;
 				Error ->
@@ -447,7 +450,7 @@ add_trigger(ConditionNegated, Group, Condition)
 %%
 remove_profile({Node, _Now, Ref} = ServiceProfileID)
 		when is_atom(Node), is_reference(Ref) -> 
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:delete(profile, ServiceProfileID, write) end) of
 		{atomic, _Result} ->
 			ok;
@@ -463,7 +466,7 @@ remove_profile({Node, _Now, Ref} = ServiceProfileID)
 %%
 remove_filter({Node, _Now, Ref} = Filter)
 		when is_atom(Node), is_reference(Ref) -> 
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:delete(filter, Filter, write) end) of
 		{atomic, _Result} ->
 			ok;
@@ -478,7 +481,7 @@ remove_filter({Node, _Now, Ref} = Filter)
 %% @doc Remove a trigger from the database.
 remove_trigger({Node, _Now, Ref} = Trigger)
 		when is_atom(Node), is_reference(Ref) -> 
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:delete(trigger, Trigger, write) end) of
 		{atomic, _Result} ->
 			ok;
@@ -494,7 +497,7 @@ remove_trigger({Node, _Now, Ref} = Trigger)
 %%
 remove_user({Node, _Now, Ref} = PrivateUserID)
 		when is_atom(Node), is_reference(Ref) -> 
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			[User] = mnesia:read(user, PrivateUserID, write),
 			[Subscriber] = mnesia:read(subscriber,
 					User#user.subscriberID, write),
@@ -521,7 +524,7 @@ remove_address("tel:" ++ _ = PublicUserID) ->
 	remove_address1(PublicUserID).
 %% @hidden
 remove_address1(PublicUserID) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:delete(address, PublicUserID, write) end) of
 		{atomic, ok} ->
 			ok;
@@ -537,7 +540,7 @@ remove_address1(PublicUserID) ->
 %%
 remove_subscriber({Node, _Now, Ref} = SubscriberID)
 		when is_atom(Node), is_reference(Ref) -> 
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			Faddr = fun(PublicUserID) ->
 						mnesia:delete(address, PublicUserID, write) end,
 			Fuser = fun(PrivateUserID) ->
@@ -704,7 +707,7 @@ get_service({Node, _Now, Ref} = ServiceProfileID)
 			(_, [], Acc) ->
 				lists:reverse(Acc)
 	end,
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			[Profile] = mnesia:read(profile, ServiceProfileID, read),
 			FilterIDs = Profile#profile.initialFilterCriteriaIDs,
 			Filters = lists:flatten([mnesia:read(filter, ID, read)
@@ -1063,7 +1066,7 @@ locate_hss(RoutingInformation) when is_list(RoutingInformation) ->
 %% @doc Retrieves <tt>Key</tt> from <tt>Table</tt>.
 %% @hidden
 get_record(Table, Key) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:read(Table, Key, read) end) of
 		{atomic, [Result]} ->
 			Result;
@@ -1077,7 +1080,7 @@ get_record(Table, Key) ->
 %% @doc Retrieves <tt>Keys</tt> from <tt>Table</tt>.
 %% @hidden
 get_records(Table, Keys) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			[mnesia:read(Table, Key, read) || Key <- Keys] end) of
 		{atomic, [Result]} ->
 			Result;
@@ -1091,7 +1094,7 @@ get_records(Table, Keys) ->
 %% @doc Retrieves first key from <tt>Table</tt>.
 %% @hidden
 get_first(Table) ->
-	case mnesia:transaction(fun() ->
+	case mnesia:activity(transaction, fun() ->
 			mnesia:first(Table) end) of
 		{atomic, '$end_of_table'} ->
 			exit(empty_table);
