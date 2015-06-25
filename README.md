@@ -130,7 +130,7 @@ The current implementation does not include a DIAMETER protocol stack implementa
 
 - Implement alternative algorithms.
 - Implement *HSS initiated procedures*.
-- Implement Yaws based administration.
+- Implement GUI for administration.
 - Implement *Public Service Identifiers*.
 - Improve visited network authorization.
 - Implement `Sh` reference point interface to *Application Servers*.
