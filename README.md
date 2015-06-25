@@ -1,4 +1,4 @@
-Home Subscriber Server (HSS)
+### Home Subscriber Server (HSS)
 
 This application implements the **HSS** network element within an IP Multimedia Subsystem (**IMS**) Core Network (CN).
 
