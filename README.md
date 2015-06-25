@@ -1,10 +1,8 @@
-![logo](doc/3Gdb.50.png?raw=true)
-
-# The 3Gdb Home Subscriber Server (HSS) #
+Home Subscriber Server (HSS)
 
 This application implements the **HSS** network element within an IP Multimedia Subsystem (**IMS**) Core Network (CN).
 
-## IP Multimedia Subsystem (IMS) ##
+## IP Multimedia Subsystem (IMS)
 
 The IMS is defined by the [Third Generation Partnership Project (3GPP)](http://www.3gpp.org) as part of it's architecture for an *all-IP* 3G mobile phone network.  [IETF](http://www.ietf.org) protocols were chosen wherever possible, in particular [SIP](http://www.ietf.org/rfc/rfc3261.txt) and [DIAMETER](http://www.ietf.org/rfc/rfc3588.txt).  An IMS Core Network (CN) can be seen mainly as a collection of SIP proxies, registrars, servers and media gateways along with the Home Subscriber Server (HSS).  While the IMS is based on SIP it is done so in a highly structured way which may be quite different from practices used in other contexts.  It should be remembered that the IMS was designed by and for *service providers* and as such it has a centralized control model.
 
@@ -24,7 +22,7 @@ The HSS *generates* security information for:
 	- communication integrity check
 	- ciphering.
 
-## Network Architecture ##
+## Network Architecture
 
 Within an IMS CN the Call Session Control Functions (CSCF) provide the SIP proxy and registrar functionality. There are three distinct types; Proxy-CSCF, Interrogating-CSCF and Serving-CSCF. All communications with IMS clients transit a P-CSCF, possibly in a visited IMS. An example signaling flow can be seen in [Figure-1.1](doc/registration-path.png) where the P-CSCF forwards an initial `REGISTER` to an I-CSCF in the home IMS CN. The I-CSCF iqueries the HSS to help select an appropriate S-CSCF to forward the request to. The S-CSCF acts as the registrar sending an authentication challenge to the user with authentication vectors supplied by the HSS.
 
@@ -32,7 +30,7 @@ Figure-1.1 ![figure-1.1](doc/registration-path.png?raw=true)
 
 Once the user has successfully authenticated the S-CSCF will complete the registration and notify the HSS.  While it is the S-CSCF which acts as the SIP registrar the HSS must track which S-CSCF a user is registered at.  An HSS may be associated with many S-CSCFs.  An IMS CN may contain more than one HSS.
 
-## Implementation ##
+## Implementation
 
 This project implements the (IMS) database schema described in [23.008 Subscriber Data](http://www.3gpp.org/ftp/Specs/html-info/23008.htm), the procedures in [29.228 Signaling](http://www.3gpp.org/ftp/Specs/html-info/29228.htm) and the algorithms in [35.206 MILENAGE](http://www.3gpp.org/ftp/Specs/html-info/35206.htm).  It is based upon Release 7.
 
@@ -40,7 +38,7 @@ The system was developed entirely in [Erlang/OTP](http://www.erlang.org) using t
 
 A number of test suites are included which use the [common_test](http://www.erlang.org/doc/apps/common_test/) application.  All of the conformance test data in [35.208](http://www.3gpp.org/ftp/Specs/html-info/35208.htm) is included in one test suite.  The [xmerl](http://www.erlang.org/doc/apps/xmerl/) application is used in test cases to validate the XML user profile downloaded during registration.
 
-## Database Schema ##
+## Database Schema
 
 The schema in [Figure 1.2](doc/permanent-subscriber-data.png) shows the organization of the permanent subscriber data. The HSS maintains the data related to **_Subscribers_** of IMS services.  Each subscription may include a number of **_Users_** of the subscribed services.  Users are identified within the IMS by a **_Private User Identity_** in the ([NAI](http://www.ietf.org/rfc/rfc4282.txt)) form "user@realm".  All communications with a user involves a **_Public User Identity_** in the form of either a [SIP URI](http://www.ietf.org/rfc/rfc3261) or a [TEL URL](http://www.ietf.org/rfc/rfc2806).  Users can, and usually are, associated with multiple Public User Identities which may also be shared among users of a common subscription.  The subscribed services are associated with *Public User Identities*.  *Subscriptions* are represented by records in the `subscriber` table, *Users* in the `user` table, *Public User Identities* in the `address` table and *Service Profiles* is the `profile` table.
 
@@ -52,7 +50,7 @@ Registrations are temporary subscriber data describing the registration status o
 Figure 1.3 ![figure-1.3](doc/temporary-subscriber-data.png?raw=true)
 
 
-## Provisioning ##
+## Provisioning
 
 In a conventional operator network a large number of *Universal Integrated Circuit Cards* (**UICC**) would be manufactured and put into the the distribution channel. The UICCs may contain an *IP Multimedia Services Identity Module* (**ISIM**) application or a *Universal Subscriber Identity Module* (**USIM**) application or both. The manufacturer would provide a file listing the ICCIDs and the corresponding authentication keys (**K** and **OPc**) as well as IMS *Private User Identity* (**IMPI**) and IMS *Public User Identity* (**IMPU**) in the case of an ISIM, or *International Mobile Subscriber Identity* (**IMSI**) in the case of a USIM. This file is used to manage the card inventory.
 
@@ -87,13 +85,13 @@ In the final response to a successful registration the `P-Associated-URI` header
                      <sip:+16475551234@acme.net;user=phone>
 ```
 
-### Security #)#
+### Security
 
 Security in the IMS is built on UMTS *Authentication and Key Agreement* ([AKA](http://www.3gpp.org/ftp/Specs/html-info/33102.htm).  A long term secret (**K**) is shared between the USIM/ISIM and the HSS only.  The AKA algorithms are executed on the UICC which is tamper resistant so even physical access to it is unlikely to expose K.  AKA accomplishes mutual authentication, the home network authenticates the USIM/ISIM which in turn authenticates the network.  It also establishes a pair of cipher and integrity keys which can be used to secure subsequent communications (i.e. **IPsec**).
 
 AKA defines seven security functions; `f1`, `f1*`, `f2`, `f3`, `f4`, `f5` and `f5*` used for authentication and key generation. The operation of these functions is to be specified by each operator and as such is not fully standardised. The algorithms implemented here follow the examples produced on request from 3GPP by ETSI SAGE Task Force ([MILENAGE](http://www.3gpp.org/ftp/Specs/html-info/35206.htm)) and are based on the block cipher *Rinjindael* now known as *Advanced Encryption Standard* (**AES**). 
 
-### User Profile ###
+### User Profile
 
 In response to a registration notification from an S-CSCF the HSS will download the user's *Service Profile* in the form of an XML document.  The document is formed on the fly from permanent subscriber data stored in the HSS.  An example is shown here:
 
@@ -124,28 +122,33 @@ In response to a registration notification from an S-CSCF the HSS will download 
 
 The S-CSCF uses this profile to determine how to involve *Application Servers* in the routing of SIP messages.
 
-### Limitations ###
+### Limitations
 
 The current implementation does not include a DIAMETER protocol stack implementation.
 
-### TODO ###
+### TODO
 
-	- Implement alternative algorithms.
-	- Implement *HSS initiated procedures*.
-	- Implement Yaws based administration.
-	- Implement *Public Service Identifiers*.
-	- Improve visited network authorization.
-	- Implement `Sh` reference point interface to *Application Servers*.
+- Implement alternative algorithms.
+- Implement *HSS initiated procedures*.
+- Implement Yaws based administration.
+- Implement *Public Service Identifiers*.
+- Improve visited network authorization.
+- Implement `Sh` reference point interface to *Application Servers*.
 
 ----
 References:
 
 [Network Architecture (3GPP TS  23.002)](http://www.3gpp.org/ftp/Specs/html-info/23002.htm)
+
 [Organization of Subscriber Data (3GPP TS 23.008)](http://www.3gpp.org/ftp/Specs/html-info/23008.htm)
+
 [Security Architecture (3GPP TS  33.102)](http://www.3gpp.org/ftp/Specs/html-info/33102.htm)
+
 [IP Multimedia Subsystem (IMS); Stage 2 (3GPP TS 23.228)](http://www.3gpp.org/ftp/Specs/html-info/23228.htm)
+
 [IP Multimedia (IM) Subsystem Cx and Dx Interfaces; Signalling flows and message contents (3GPP TS  29.228)](http://www.3gpp.org/ftp/Specs/html-info/29228.htm)
+
 [Specification of the MILENAGE algorithm set: An example algorithm set for the 3GPP authentication and key generation functions f1, f1*, f2, f3, f4, f5 and f5*; Document 2: Algorithm specification (3GPP TS 35.206)](http://www.3gpp.org/ftp/Specs/html-info/35206.htm)
+
 [Specification of the MILENAGE algorithm set: An example algorithm set for the 3GPP authentication and key generation functions f1, f1*, f2, f3, f4, f5 and f5*; Document 4: Design conformance test data (3GPP TS 35.208)](http://www.3gpp.org/ftp/Specs/html-info/35208.htm)
-![3gdb logo](doc/3Gdb.50.png?raw=true) ![erlang logo](http://www.erlang.org/images/logo.gif?raw=true)
 
