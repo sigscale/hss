@@ -1052,7 +1052,7 @@ start_link(Args) ->
 
 %% @spec () -> guid()
 make_guid() ->
-	{node(), now(), make_ref()}.
+	{node(), erlang:timestamp(), make_ref()}.
 
 %% @spec (RoutingInformation::string()) -> pid()
 %% @hidden

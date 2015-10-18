@@ -215,7 +215,7 @@ f5star(OPc, K, RAND) ->
 %% 	functions and is derived from OP and the subscriber key (K).
 %% 	
 opc(OP, K) ->
-	crypto:aes_cfb_128_encrypt(K, OP, OP).
+	crypto:block_encrypt(aes_cfb128, K, OP, OP).
 
 %%----------------------------------------------------------------------
 %% The milenage internal functions
@@ -232,7 +232,7 @@ opc(OP, K) ->
 %% 	the output functions.
 %% @hidden
 temp(OPc, K, RAND) ->
-	crypto:aes_cbc_128_encrypt(K, OPc, RAND).
+	crypto:block_encrypt(aes_cbc128, K, OPc, RAND).
 	
 %% @spec (SQN, AMF) -> IN1
 %% 	SQN = sqn()
@@ -262,7 +262,7 @@ out1(OPc, K, TEMP, IN1) ->
 	B = rot(A, ?r1),
 	C = crypto:exor(TEMP, B),
 	D = crypto:exor(C, ?c1),
-	crypto:aes_cfb_128_encrypt(K, D, OPc).
+	crypto:block_encrypt(aes_cfb128, K, D, OPc).
 
 %% @spec (OPc, K, TEMP) -> OUT2
 %% 	OPc = opc()
@@ -278,7 +278,7 @@ out2(OPc, K, TEMP) ->
 	A = crypto:exor(TEMP, OPc),
 	B = rot(A, ?r2),
 	C = crypto:exor(B, ?c2),
-	crypto:aes_cfb_128_encrypt(K, C, OPc).
+	crypto:block_encrypt(aes_cfb128, K, C, OPc).
 
 %% @spec (OPc, K, TEMP) -> OUT3
 %% 	OPc = opc()
@@ -294,7 +294,7 @@ out3(OPc, K, TEMP) ->
 	A = crypto:exor(TEMP, OPc),
 	B = rot(A, ?r3),
 	C = crypto:exor(B, ?c3),
-	crypto:aes_cfb_128_encrypt(K, C, OPc).
+	crypto:block_encrypt(aes_cfb128, K, C, OPc).
 
 %% @spec (OPc, K, TEMP) -> OUT4
 %% 	OPc = opc()
@@ -310,7 +310,7 @@ out4(OPc, K, TEMP) ->
 	A = crypto:exor(TEMP, OPc),
 	B = rot(A, ?r4),
 	C = crypto:exor(B, ?c4),
-	crypto:aes_cfb_128_encrypt(K, C, OPc).
+	crypto:block_encrypt(aes_cfb128, K, C, OPc).
 
 %% @spec (OPc, K, TEMP) -> OUT5
 %% 	OPc = opc()
@@ -326,7 +326,7 @@ out5(OPc, K, TEMP) ->
 	A = crypto:exor(TEMP, OPc),
 	B = rot(A, ?r5),
 	C = crypto:exor(B, ?c5),
-	crypto:aes_cfb_128_encrypt(K, C, OPc).
+	crypto:block_encrypt(aes_cfb128, K, C, OPc).
 
 %% @spec (X, R) -> binary()
 %% 	X = binary()
