@@ -4,7 +4,7 @@ This application implements the **HSS** network element within an IP Multimedia 
 
 ## IP Multimedia Subsystem (IMS)
 
-The IMS is defined by the [Third Generation Partnership Project (3GPP)](http://www.3gpp.org) as part of it's architecture for an *all-IP* 3G mobile phone network.  [IETF](http://www.ietf.org) protocols were chosen wherever possible, in particular [SIP](http://www.ietf.org/rfc/rfc3261.txt) and [DIAMETER](http://www.ietf.org/rfc/rfc3588.txt).  An IMS Core Network (CN) can be seen mainly as a collection of SIP proxies, registrars, servers and media gateways along with the Home Subscriber Server (HSS).  While the IMS is based on SIP it is done so in a highly structured way which may be quite different from practices used in other contexts.  It should be remembered that the IMS was designed by and for *service providers* and as such it has a centralized control model.
+The IMS is defined by the [Third Generation Partnership Project (3GPP)](http://www.3gpp.org) as part of its architecture for an *all-IP* 3G mobile phone network.  [IETF](http://www.ietf.org) protocols were chosen wherever possible, in particular [SIP](http://www.ietf.org/rfc/rfc3261.txt) and [DIAMETER](http://www.ietf.org/rfc/rfc3588.txt).  An IMS Core Network (CN) can be seen mainly as a collection of SIP proxies, registrars, servers and media gateways along with the Home Subscriber Server (HSS).  While the IMS is based on SIP it is done so in a highly structured way which may be quite different from practices used in other contexts.  It should be remembered that the IMS was designed by and for *service providers* and as such it has a centralized control model.
 
 [3GPP TS 23.002 Network Architecture](http://www.3gpp.org/ftp/Specs/html-info/23002.htm) describes an **HSS**:
 > The HSS is the master database for a given user. It is the entity containing the subscription-related information to support the network entities actually handling calls/sessions.
@@ -57,7 +57,7 @@ In a conventional operator network a large number of *Universal Integrated Circu
 Figure 1.4 ![figure-1.4](doc/card-flow.png?raw=true)
 
 
-To provision a new subscriber a card is taken from inventory and it's ICCID is used to determine the identities and keys stored on the UICC. Appropriate *Public User Identities* are assigned and a *Service Profile* is selected for each one. A new `subscriber` and `user` table entry are created along with `address` table entries for each *Public User Identity*.
+To provision a new subscriber a card is taken from inventory and its ICCID is used to determine the identities and keys stored on the UICC. Appropriate *Public User Identities* are assigned and a *Service Profile* is selected for each one. A new `subscriber` and `user` table entry are created along with `address` table entries for each *Public User Identity*.
 
 Figure 1.5 ![figure-1.5](doc/provisioning.png?raw=true)
 
